@@ -1,8 +1,8 @@
 pipeline {
     agent none
-    // environment {
-    //     JBOSS_CREDENTIALS = credentials('jboss-credentials')
-    // }
+    environment {
+        JBOSS_CREDENTIALS = credentials('jboss-credentials')
+    }
     stages {
         stage('Build') {
             agent {
@@ -14,23 +14,24 @@ pipeline {
                 sh 'mvn clean package -B -ntp -DskipTests'
             }
         }
-        // stage('Deploy with jboss-cli.sh') {
-        //     agent any
-        //     steps {
-        //         sshagent (credentials: ['centos-private-key']){
-        //             sh '''
-        //                 pwd
-        //                 ls -la
-        //                 env | sort
+        stage('Deploy with jboss-cli.sh') {
+            agent any
+            steps {
+                sshagent (credentials: ['debian-private-key']){
+                    // ip 34.221.222.237 , es la ip del host debian
+                    sh '''
+                        pwd
+                        ls -la
+                        env | sort
 
-        //                 scp -o StrictHostKeyChecking=no target/applicationPetstore.war ec2-user@35.91.230.131:/home/ec2-user
-        //                 ssh ec2-user@35.91.230.131 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy applicationPetstore.war'"
-        //                 ssh ec2-user@35.91.230.131 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/ec2-user/applicationPetstore.war'"
-        //                 ssh ec2-user@35.91.230.131 'rm -f /home/ec2-user/applicationPetstore.war'
-        //             '''
-        //         }
-        //     }
-        // }
+                        scp -o StrictHostKeyChecking=no target/applicationPetstore.war admin@34.221.222.237:/home/admin
+                        #ssh admin@34.221.222.237 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy applicationPetstore.war'"
+                        ssh admin@34.221.222.237 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/admin/applicationPetstore.war'"
+                        ssh admin@34.221.222.237 'rm -f /home/admin/applicationPetstore.war'
+                    '''
+                }
+            }
+        }
         // stage('Deploy with Ansible') {
         //     agent {
         //         docker {
