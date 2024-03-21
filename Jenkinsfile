@@ -19,16 +19,16 @@ pipeline {
             steps {
                 sshagent (credentials: ['debian-private-key']){
                     // tener encuenta jboss se encuentra instalado
-                    // ip 34.221.222.237 , es la ip del host debian
+                    // ip 35.92.118.215 , es la ip del host debian
                     sh '''
                         pwd
                         ls -la
                         env | sort
 
-                        scp -o StrictHostKeyChecking=no target/applicationPetstore.war admin@34.221.222.237:/home/admin
-                        #ssh admin@34.221.222.237 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy applicationPetstore.war'"
-                        ssh admin@34.221.222.237 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/admin/applicationPetstore.war'"
-                        ssh admin@34.221.222.237 'rm -f /home/admin/applicationPetstore.war'
+                        scp -o StrictHostKeyChecking=no target/applicationPetstore.war admin@35.92.118.215:/home/admin
+                        #ssh admin@35.92.118.215 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy applicationPetstore.war'"
+                        ssh admin@35.92.118.215 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/admin/applicationPetstore.war'"
+                        ssh admin@35.92.118.215 'rm -f /home/admin/applicationPetstore.war'
                     '''
                 }
             }
@@ -46,13 +46,13 @@ pipeline {
         //     options { skipDefaultCheckout() }
         //     steps {
         //         dir('ansible'){
-        //             sshagent (credentials: ['centos-private-key']){
+        //             sshagent (credentials: ['debian-private-key']){
         //                 sh 'env | sort'
 
-        //                 sh 'pip install --upgrade ansible'
-        //                 sh 'ansible --version'
-        //                 sh 'ansible-galaxy --version'
-        //                 sh 'ansible-galaxy collection install community.general'
+        //                 // sh 'pip install --upgrade ansible'
+        //                 // sh 'ansible --version'
+        //                 // sh 'ansible-galaxy --version'
+        //                 // sh 'ansible-galaxy collection install community.general'
                        
         //                 sh 'ansible-playbook -i hosts deploy_jboss.yml'
         //             }
