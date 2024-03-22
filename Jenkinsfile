@@ -1,7 +1,7 @@
 pipeline {
-    agent none
-    environment {
-        JBOSS_CREDENTIALS = credentials('jboss-credentials')
+    agent any
+    tools {
+        maven 'maven3.8.5'
     }
     stages {
         stage('Build') {
@@ -14,25 +14,67 @@ pipeline {
                 sh 'mvn clean package -B -ntp -DskipTests'
             }
         }
-        // stage('Deploy with jboss-cli.sh') {
-        //     agent any
-        //     steps {
-        //         sshagent (credentials: ['debian-private-key']){
-        //             // tener encuenta jboss se encuentra instalado
-        //             // ip 54.190.196.47 , es la ip del host debian
-        //             sh '''
-        //                 pwd
-        //                 ls -la
-        //                 env | sort
+         stage('Testing') {
+            steps {
+                sh 'mvn test -B -ntp'
+            }
+            post {                
+                success {
+                    jacoco()
+                    junit 'target/surefire-reports/*.xml'
+                }                
+                failure {
+                    echo 'Ha ocurrido un error TEST'
+                }
+            }
+        }
+        stage('Sonarqube') {
+            steps {
+                withSonarQubeEnv('sonarqube'){                    
+                    sh 'mvn sonar:sonar -B -ntp'
+                }              
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                // Quality Gate
+                timeout(time: 1, unit: 'HOURS'){
+                    waitForQualityGate abortPipeline: true
+                }      
+            }
+        }        
+        stage('Artifactory') {
+            steps {
+                script {
+                    sh 'env | sort'
 
-        //                 scp -o StrictHostKeyChecking=no target/applicationPetstore.war admin@54.190.196.47:/home/admin
-        //                 ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='undeploy applicationPetstore.war'"
-        //                 ssh admin@54.190.196.47 "~/jboss-eap-7.4/bin/jboss-cli.sh --user=$JBOSS_CREDENTIALS_USR --password=$JBOSS_CREDENTIALS_PSW -c --command='deploy /home/admin/applicationPetstore.war'"
-        //                 ssh admin@54.190.196.47 'rm -f /home/admin/applicationPetstore.war'
-        //             '''
-        //         }
-        //     }
-        // }
+                    def pom = readMavenPom file: 'pom.xml'
+                    println pom
+
+                    def server = Artifactory.server 'artifactory'
+                    def repository = pom.artifactId
+
+                    if("${GIT_BRANCH}" == 'origin/master'){
+                        repository = repository + '-release'
+                    } else {
+                        repository = repository + '-snapshot'
+                    }
+
+                    def uploadSpec = """
+                        {
+                            "files": [
+                                {
+                                    "pattern": "target/.*.war",
+                                    "target": "${repository}/${pom.groupId}/${pom.artifactId}/${pom.version}/",
+                                    "regexp": "true"
+                                }
+                            ]
+                        }
+                    """
+                    server.upload spec: uploadSpec
+                }
+            }
+        }
         stage('Deploy with Ansible') {
             agent {
                 docker {
@@ -63,5 +105,11 @@ pipeline {
             }
         }
 
+    }
+    post {
+        success {
+            // archiveArtifacts artifacts: 'target/*.war', followSymlinks: false
+            deleteDir()
+        }
     }
 }
