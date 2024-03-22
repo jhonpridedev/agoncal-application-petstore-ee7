@@ -49,10 +49,13 @@ pipeline {
                     sshagent (credentials: ['debian-private-key']){
                         sh 'env | sort'
 
+
+                        // ---  para community.general.jboss
                         sh 'pip install --upgrade ansible'
                         sh 'ansible --version'
                         sh 'ansible-galaxy --version'
                         sh 'ansible-galaxy collection install community.general'
+                        // ---
                        
                         sh 'ansible-playbook -i hosts deploy_jboss.yml'
                     }
