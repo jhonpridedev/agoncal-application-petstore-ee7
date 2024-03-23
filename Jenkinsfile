@@ -91,7 +91,6 @@ pipeline {
                     sshagent (credentials: ['debian-private-key']){
                         sh 'env | sort'
 
-
                         // ---  para community.general.jboss
                         sh 'pip install --upgrade ansible'
                         sh 'ansible --version'
