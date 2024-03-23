@@ -1,5 +1,5 @@
 # App Monolitica CI Y CD
-El pipeline se encuentra en el job __spring-framework-petclinic__
+El pipeline se encuentra en el job __agoncal-application-petstore-ee7__
 
 - __Build__
     - Se realiza el empaquetado en un file .war
